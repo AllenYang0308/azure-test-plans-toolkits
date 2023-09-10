@@ -38,8 +38,8 @@ public class TestPlansAutomation {
     @Getter
     private final String project;
 
-    @Getter
-    private final ConnectionProperty cp;
+    // @Getter
+    // private final ConnectionProperty cp;
 
     @Getter
     private final Map<String, Map<String, PlansTypeImp>> plansTypeObjectMap;
@@ -55,7 +55,6 @@ public class TestPlansAutomation {
         this.plansTypeObjectMap = new HashMap<>();
         this.organization = organization;
         this.project = project;
-        this.cp = new ConnectionProperty();
         this.workItemId = new HashMap<>();
     }
 
@@ -81,12 +80,13 @@ public class TestPlansAutomation {
         PlansTypeObjectList parameterList = new PlansTypeObjectList();
         parameterUrl = parameterUrl.formatted(this.organization, this.project, workItemId);
         System.out.println("parameterUrl: "+parameterUrl);
-        this.cp.setApiUrl(parameterUrl);
-        this.cp.setMethod("GET");
-        this.cp.setCertFile("");
-        this.cp.setPostData("");
+        ConnectionProperty cp = new ConnectionProperty();
+        cp.setApiUrl(parameterUrl);
+        cp.setMethod("GET");
+        cp.setCertFile("");
+        cp.setPostData("");
         DemoApis apis = new DemoApis();
-        String json = apis.getDemoApis("settings.yaml", this.cp);
+        String json = apis.getDemoApis("settings.yaml", cp);
         String parameterItem = new JSONObject(
                 json
         ).getJSONArray(
@@ -117,12 +117,13 @@ public class TestPlansAutomation {
         PlansTypeStringList stepList = new PlansTypeStringList();
         String stepsUrl = this.urlType.getOrDefault(urlType, "");
         stepsUrl = stepsUrl.formatted(this.organization, testCaseId);
-        this.cp.setApiUrl(stepsUrl);
-        this.cp.setMethod("GET");
-        this.cp.setCertFile("");
-        this.cp.setPostData("");
+        ConnectionProperty cp = new ConnectionProperty();
+        cp.setApiUrl(stepsUrl);
+        cp.setMethod("GET");
+        cp.setCertFile("");
+        cp.setPostData("");
         DemoApis apis = new DemoApis();
-        String json = apis.getDemoApis("settings.yaml", this.cp);
+        String json = apis.getDemoApis("settings.yaml", cp);
         JSONObject jsonObject = new JSONObject(json);
         JSONObject fields;
         fields = (JSONObject) jsonObject.get("fields");
@@ -142,12 +143,13 @@ public class TestPlansAutomation {
 
         String testCasesUrl = this.urlType.getOrDefault(urlType, "");
         testCasesUrl = testCasesUrl.formatted(this.organization, this.project, planId, suiteId);
-        this.cp.setApiUrl(testCasesUrl);
-        this.cp.setMethod("GET");
-        this.cp.setCertFile("");
-        this.cp.setPostData("");
+        ConnectionProperty cp = new ConnectionProperty();
+        cp.setApiUrl(testCasesUrl);
+        cp.setMethod("GET");
+        cp.setCertFile("");
+        cp.setPostData("");
         DemoApis apis = new DemoApis();
-        String json = apis.getDemoApis("settings.yaml", this.cp);
+        String json = apis.getDemoApis("settings.yaml", cp);
 
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> map = objectMapper.readValue(json, new TypeReference<Map<String, Object>>(){});
@@ -183,12 +185,13 @@ public class TestPlansAutomation {
 
         String testPlansUrl = this.urlType.getOrDefault(urlType, "");
         testPlansUrl = testPlansUrl.formatted(this.organization, this.project);
-        this.cp.setApiUrl(testPlansUrl);
-        this.cp.setMethod("GET");
-        this.cp.setCertFile("");
-        this.cp.setPostData("");
+        ConnectionProperty cp = new ConnectionProperty();
+        cp.setApiUrl(testPlansUrl);
+        cp.setMethod("GET");
+        cp.setCertFile("");
+        cp.setPostData("");
         DemoApis apis = new DemoApis();
-        String json = apis.getDemoApis("settings.yaml", this.cp);
+        String json = apis.getDemoApis("settings.yaml", cp);
 
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> map = objectMapper.readValue(json, new TypeReference<Map<String, Object>>(){});
