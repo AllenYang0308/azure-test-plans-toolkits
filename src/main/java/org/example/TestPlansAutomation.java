@@ -28,7 +28,8 @@ public class TestPlansAutomation {
                     new SimpleEntry<>("TestSuiteUrl", "https://dev.azure.com/%s/%s/_apis/test/Plans/%s/suites/%s?api-version=5.0"),
                     new SimpleEntry<>("TestCasesUrl", "https://dev.azure.com/%s/%s/_apis/test/Plans/%s/suites/%s/testcases?api-version=5.0"),
                     new SimpleEntry<>("TestStepsUrl", "https://dev.azure.com/%s/_apis/wit/workItems/%s"),
-                    new SimpleEntry<>("StepsParameter", "https://dev.azure.com/%s/%s/_apis/wit/workitems?ids=%s&api-version=5.0")
+                    new SimpleEntry<>("StepsParameter", "https://dev.azure.com/%s/%s/_apis/wit/workitems?ids=%s&api-version=5.0"),
+                    new SimpleEntry<>("GetPointIds", "https://dev.azure.com/%s/%s/_apis/test/Plans/%s/Suites/%s/points?api-version=5.0")
             )
     );
 
@@ -37,9 +38,6 @@ public class TestPlansAutomation {
 
     @Getter
     private final String project;
-
-    // @Getter
-    // private final ConnectionProperty cp;
 
     @Getter
     private final Map<String, Map<String, PlansTypeImp>> plansTypeObjectMap;
@@ -79,7 +77,6 @@ public class TestPlansAutomation {
         String parameterUrl = this.urlType.getOrDefault(urlType, "");
         PlansTypeObjectList parameterList = new PlansTypeObjectList();
         parameterUrl = parameterUrl.formatted(this.organization, this.project, workItemId);
-        System.out.println("parameterUrl: "+parameterUrl);
         ConnectionProperty cp = new ConnectionProperty();
         cp.setApiUrl(parameterUrl);
         cp.setMethod("GET");
@@ -98,7 +95,6 @@ public class TestPlansAutomation {
         ).getString(
                 "Microsoft.VSTS.TCM.Parameters"
         );
-        System.out.println("parameterItem: "+parameterItem);
         Pattern parameterPattern = Pattern.compile("<kvp\\ key=\\\"([\\ \\w\\d.]+)\\\"\\ value=\\\"([\\:\\/\\ \\d\\w\\u4E00-\\u9FA5.\\?\\&\\;\\@\\=\\[\\]\"\\*]*)\\\"/>");
         Matcher matcher = parameterPattern.matcher(parameterItem);
 
@@ -139,7 +135,31 @@ public class TestPlansAutomation {
         return stepList;
     }
 
+    protected Map<String, String> getPointIds(String urlType, String planId, String suiteId) throws IOException {
+        Map<String, String> response = new HashMap<>();
+        String pointIdsUrl = this.urlType.getOrDefault(urlType, "");
+        pointIdsUrl = pointIdsUrl.formatted(this.organization, this.project, planId, suiteId);
+        ConnectionProperty cp = new ConnectionProperty();
+        cp.setApiUrl(pointIdsUrl);
+        cp.setMethod("GET");
+        cp.setCertFile("");
+        cp.setPostData("");
+        DemoApis apis = new DemoApis();
+        String json = apis.getDemoApis("settings.yaml", cp);
+        JSONObject jsonObject = new JSONObject(json);
+        JSONArray pointList = jsonObject.getJSONArray("value");
+        for (int i=0; i<pointList.length(); i++) {
+            Map<String, String> r = new HashMap<>();
+            JSONObject res = pointList.getJSONObject(i);
+            String pointId = res.get("id").toString();
+            String testCaseId = res.getJSONObject("testCase").getString("id");
+            response.put(testCaseId, pointId);
+        }
+        return response;
+    }
+
     protected void GetTestCases(String urlType, String planId, String suiteId) throws IOException {
+        Map<String, String> pointIds = this.getPointIds("GetPointIds", planId, suiteId);
 
         String testCasesUrl = this.urlType.getOrDefault(urlType, "");
         testCasesUrl = testCasesUrl.formatted(this.organization, this.project, planId, suiteId);
@@ -163,6 +183,7 @@ public class TestPlansAutomation {
             String testCaseWorkItemUrl = (String) testCaseItem.get("url");
             testCase.put("TestCaseId", new PlansTypeString(testCaseId));
             testCase.put("TestCaseWorkItemUrl", new PlansTypeString(testCaseWorkItemUrl));
+            testCase.put("PointId", new PlansTypeString(pointIds.get(testCaseId)));
             PlansTypeStringList ptsl = this.getTestSteps("TestStepsUrl", planId, testCaseId);
             testCase.put("TestCaseSteps", ptsl);
 
