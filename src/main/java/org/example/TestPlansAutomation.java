@@ -206,6 +206,7 @@ public class TestPlansAutomation {
 
         String testPlansUrl = this.urlType.getOrDefault(urlType, "");
         testPlansUrl = testPlansUrl.formatted(this.organization, this.project);
+        System.out.println(testPlansUrl);
         ConnectionProperty cp = new ConnectionProperty();
         cp.setApiUrl(testPlansUrl);
         cp.setMethod("GET");
@@ -213,6 +214,7 @@ public class TestPlansAutomation {
         cp.setPostData("");
         DemoApis apis = new DemoApis();
         String json = apis.getDemoApis("settings.yaml", cp);
+        System.out.println(json);
 
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> map = objectMapper.readValue(json, new TypeReference<Map<String, Object>>(){});
