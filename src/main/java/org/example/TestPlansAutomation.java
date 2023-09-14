@@ -3,11 +3,9 @@ package org.example;
 import lombok.Getter;
 import org.example.connection.ConnectionProperty;
 import java.io.IOException;
+import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.example.plansType.PlansTypeObjectList;
@@ -29,7 +27,9 @@ public class TestPlansAutomation {
                     new SimpleEntry<>("TestCasesUrl", "https://dev.azure.com/%s/%s/_apis/test/Plans/%s/suites/%s/testcases?api-version=5.0"),
                     new SimpleEntry<>("TestStepsUrl", "https://dev.azure.com/%s/_apis/wit/workItems/%s"),
                     new SimpleEntry<>("StepsParameter", "https://dev.azure.com/%s/%s/_apis/wit/workitems?ids=%s&api-version=5.0"),
-                    new SimpleEntry<>("GetPointIds", "https://dev.azure.com/%s/%s/_apis/test/Plans/%s/Suites/%s/points?api-version=5.0")
+                    new SimpleEntry<>("GetPointIds", "https://dev.azure.com/%s/%s/_apis/test/Plans/%s/Suites/%s/points?api-version=5.0"),
+                    new SimpleEntry<>("CreateRuns", "https://dev.azure.com/%s/%s/_apis/test/runs?api-version=5.0"),
+                    new SimpleEntry<>("UpdateResult", "https://dev.azure.com/%s/%s/_apis/test/Runs/%s/results?api-version=5.0")
             )
     );
 
@@ -56,6 +56,7 @@ public class TestPlansAutomation {
         this.workItemId = new HashMap<>();
     }
 
+
     public Map<String, Map<String, PlansTypeImp>> GetPlansObjectMap() {
         return this.plansTypeObjectMap;
     }
@@ -71,6 +72,33 @@ public class TestPlansAutomation {
             rsp.add(key);
         });
         return rsp;
+    }
+
+    protected String CreateCaseRuns(String runsName, String planId, int pointId) throws IOException {
+        String runsId = "0";
+        // Create post data.
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("name", runsName);
+        JSONObject planObject = new JSONObject();
+        planObject.put("id", planId);
+        jsonObject.put("plan", planObject);
+        Integer[] pointIds = new Integer[]{pointId};
+        jsonObject.put("pointIds", pointIds);
+        String outputString = jsonObject.toString();
+        // Do Create runs
+        String runsUrl = this.urlType.getOrDefault("CreateRuns", "");
+        runsUrl = runsUrl.formatted(this.organization, this.project);
+        ConnectionProperty cp = new ConnectionProperty();
+        cp.setApiUrl(runsUrl);
+        cp.setMethod("POST");
+        cp.setCertFile("");
+        cp.setPostData(outputString);
+        DemoApis apis = new DemoApis();
+        String json = apis.getDemoApis("settings.yaml", cp);
+        System.out.println(json);
+        // Get run Id
+        runsId = String.valueOf(new JSONObject(json).getInt("id"));
+        return runsId;
     }
 
     private PlansTypeObjectList getStepsParameter(String urlType, String planId, String workItemId) throws IOException {
@@ -108,6 +136,31 @@ public class TestPlansAutomation {
         }
         return parameterList;
     }
+
+    protected void UpdateRunsResult(String runsId, int resultId, String state, String outcome, String comment) throws IOException {
+        JSONObject[] postDataList;
+        JSONObject postData = new JSONObject();
+        postData.put("id", resultId);
+        postData.put("state", state);
+        postData.put("outcome", outcome);
+        postData.put("comment", comment);
+        postDataList = new JSONObject[]{postData};
+        String postDataString = Arrays.toString(postDataList);
+        System.out.println(postDataString);
+
+        String updateResultUrl = this.urlType.getOrDefault("UpdateResult", "");
+        updateResultUrl = updateResultUrl.formatted(this.organization, this.project, runsId);
+        ConnectionProperty cp = new ConnectionProperty();
+        cp.setApiUrl(updateResultUrl);
+        cp.setMethod("PATCH");
+        cp.setCertFile("");
+        cp.setPostData(postDataString);
+        DemoApis apis = new DemoApis();
+        String json = apis.getDemoApis("settings.yaml", cp);
+        JSONObject jsonObject = new JSONObject(json);
+        System.out.println(jsonObject);
+    }
+
 
     private PlansTypeStringList getTestSteps(String urlType, String planId, String testCaseId) throws IOException {
         PlansTypeStringList stepList = new PlansTypeStringList();
@@ -170,6 +223,7 @@ public class TestPlansAutomation {
         cp.setPostData("");
         DemoApis apis = new DemoApis();
         String json = apis.getDemoApis("settings.yaml", cp);
+        System.out.println("Cases list: "+json);
 
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> map = objectMapper.readValue(json, new TypeReference<Map<String, Object>>(){});
@@ -180,10 +234,22 @@ public class TestPlansAutomation {
             Map<String, PlansTypeImp> testCase = new HashMap<>();
             Map<String, Object> testCaseItem = (Map<String, Object>) item.get("testCase");
             String testCaseId = (String) testCaseItem.get("id");
+            String workItemUrl = (String) testCaseItem.get("url");
+            // Get test case name
+            ConnectionProperty itemcp = new ConnectionProperty();
+            itemcp.setApiUrl(workItemUrl);
+            itemcp.setMethod("GET");
+            itemcp.setCertFile("");
+            itemcp.setPostData("");
+            DemoApis itemApis = new DemoApis();
+            String itemJson = itemApis.getDemoApis("settings.yaml", itemcp);
+            String caseName = new JSONObject(itemJson).getJSONObject("fields").getString("System.Title");
+            // End of get test case name
             String testCaseWorkItemUrl = (String) testCaseItem.get("url");
             testCase.put("TestCaseId", new PlansTypeString(testCaseId));
             testCase.put("TestCaseWorkItemUrl", new PlansTypeString(testCaseWorkItemUrl));
             testCase.put("PointId", new PlansTypeString(pointIds.get(testCaseId)));
+            testCase.put("TestCaseName", new PlansTypeString(caseName));
             PlansTypeStringList ptsl = this.getTestSteps("TestStepsUrl", planId, testCaseId);
             testCase.put("TestCaseSteps", ptsl);
 
