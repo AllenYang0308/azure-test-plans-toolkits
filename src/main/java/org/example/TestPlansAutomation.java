@@ -3,11 +3,9 @@ package org.example;
 import lombok.Getter;
 import org.example.connection.ConnectionProperty;
 import java.io.IOException;
+import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.example.plansType.PlansTypeObjectList;
@@ -28,7 +26,10 @@ public class TestPlansAutomation {
                     new SimpleEntry<>("TestSuiteUrl", "https://dev.azure.com/%s/%s/_apis/test/Plans/%s/suites/%s?api-version=5.0"),
                     new SimpleEntry<>("TestCasesUrl", "https://dev.azure.com/%s/%s/_apis/test/Plans/%s/suites/%s/testcases?api-version=5.0"),
                     new SimpleEntry<>("TestStepsUrl", "https://dev.azure.com/%s/_apis/wit/workItems/%s"),
-                    new SimpleEntry<>("StepsParameter", "https://dev.azure.com/%s/%s/_apis/wit/workitems?ids=%s&api-version=5.0")
+                    new SimpleEntry<>("StepsParameter", "https://dev.azure.com/%s/%s/_apis/wit/workitems?ids=%s&api-version=5.0"),
+                    new SimpleEntry<>("GetPointIds", "https://dev.azure.com/%s/%s/_apis/test/Plans/%s/Suites/%s/points?api-version=5.0"),
+                    new SimpleEntry<>("CreateRuns", "https://dev.azure.com/%s/%s/_apis/test/runs?api-version=5.0"),
+                    new SimpleEntry<>("UpdateResult", "https://dev.azure.com/%s/%s/_apis/test/Runs/%s/results?api-version=5.0")
             )
     );
 
@@ -37,9 +38,6 @@ public class TestPlansAutomation {
 
     @Getter
     private final String project;
-
-    // @Getter
-    // private final ConnectionProperty cp;
 
     @Getter
     private final Map<String, Map<String, PlansTypeImp>> plansTypeObjectMap;
@@ -58,6 +56,7 @@ public class TestPlansAutomation {
         this.workItemId = new HashMap<>();
     }
 
+
     public Map<String, Map<String, PlansTypeImp>> GetPlansObjectMap() {
         return this.plansTypeObjectMap;
     }
@@ -75,11 +74,34 @@ public class TestPlansAutomation {
         return rsp;
     }
 
+    protected String CreateCaseRuns(String runsName, String planId, int pointId) throws IOException {
+        String runsId = "0";
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("name", runsName);
+        JSONObject planObject = new JSONObject();
+        planObject.put("id", planId);
+        jsonObject.put("plan", planObject);
+        Integer[] pointIds = new Integer[]{pointId};
+        jsonObject.put("pointIds", pointIds);
+        String outputString = jsonObject.toString();
+        String runsUrl = this.urlType.getOrDefault("CreateRuns", "");
+        runsUrl = runsUrl.formatted(this.organization, this.project);
+        ConnectionProperty cp = new ConnectionProperty();
+        cp.setApiUrl(runsUrl);
+        cp.setMethod("POST");
+        cp.setCertFile("");
+        cp.setPostData(outputString);
+        DemoApis apis = new DemoApis();
+        String json = apis.getDemoApis("settings.yaml", cp);
+        // Get run Id
+        runsId = String.valueOf(new JSONObject(json).getInt("id"));
+        return runsId;
+    }
+
     private PlansTypeObjectList getStepsParameter(String urlType, String planId, String workItemId) throws IOException {
         String parameterUrl = this.urlType.getOrDefault(urlType, "");
         PlansTypeObjectList parameterList = new PlansTypeObjectList();
         parameterUrl = parameterUrl.formatted(this.organization, this.project, workItemId);
-        System.out.println("parameterUrl: "+parameterUrl);
         ConnectionProperty cp = new ConnectionProperty();
         cp.setApiUrl(parameterUrl);
         cp.setMethod("GET");
@@ -98,8 +120,7 @@ public class TestPlansAutomation {
         ).getString(
                 "Microsoft.VSTS.TCM.Parameters"
         );
-        System.out.println("parameterItem: "+parameterItem);
-        Pattern parameterPattern = Pattern.compile("<kvp\\ key=\\\"([\\ \\w\\d.]+)\\\"\\ value=\\\"([\\:\\/\\ \\d\\w\\u4E00-\\u9FA5.\\&\\;\\@\\=\\[\\]\"\\*]*)\\\"/>");
+        Pattern parameterPattern = Pattern.compile("<kvp\\ key=\\\"([\\ \\w\\d.]+)\\\"\\ value=\\\"([\\:\\/\\ \\d\\w\\u4E00-\\u9FA5.\\?\\&\\;\\@\\=\\[\\]\"\\*]*)\\\"/>");
         Matcher matcher = parameterPattern.matcher(parameterItem);
 
         Map<String, PlansTypeImp> parameterObject = new HashMap<>();
@@ -112,6 +133,29 @@ public class TestPlansAutomation {
         }
         return parameterList;
     }
+
+    protected void UpdateRunsResult(String runsId, int resultId, String state, String outcome, String comment) throws IOException {
+        JSONObject[] postDataList;
+        JSONObject postData = new JSONObject();
+        postData.put("id", resultId);
+        postData.put("state", state);
+        postData.put("outcome", outcome);
+        postData.put("comment", comment);
+        postDataList = new JSONObject[]{postData};
+        String postDataString = Arrays.toString(postDataList);
+
+        String updateResultUrl = this.urlType.getOrDefault("UpdateResult", "");
+        updateResultUrl = updateResultUrl.formatted(this.organization, this.project, runsId);
+        ConnectionProperty cp = new ConnectionProperty();
+        cp.setApiUrl(updateResultUrl);
+        cp.setMethod("PATCH");
+        cp.setCertFile("");
+        cp.setPostData(postDataString);
+        DemoApis apis = new DemoApis();
+        String json = apis.getDemoApis("settings.yaml", cp);
+        JSONObject jsonObject = new JSONObject(json);
+    }
+
 
     private PlansTypeStringList getTestSteps(String urlType, String planId, String testCaseId) throws IOException {
         PlansTypeStringList stepList = new PlansTypeStringList();
@@ -139,7 +183,31 @@ public class TestPlansAutomation {
         return stepList;
     }
 
+    protected Map<String, String> getPointIds(String urlType, String planId, String suiteId) throws IOException {
+        Map<String, String> response = new HashMap<>();
+        String pointIdsUrl = this.urlType.getOrDefault(urlType, "");
+        pointIdsUrl = pointIdsUrl.formatted(this.organization, this.project, planId, suiteId);
+        ConnectionProperty cp = new ConnectionProperty();
+        cp.setApiUrl(pointIdsUrl);
+        cp.setMethod("GET");
+        cp.setCertFile("");
+        cp.setPostData("");
+        DemoApis apis = new DemoApis();
+        String json = apis.getDemoApis("settings.yaml", cp);
+        JSONObject jsonObject = new JSONObject(json);
+        JSONArray pointList = jsonObject.getJSONArray("value");
+        for (int i=0; i<pointList.length(); i++) {
+            Map<String, String> r = new HashMap<>();
+            JSONObject res = pointList.getJSONObject(i);
+            String pointId = res.get("id").toString();
+            String testCaseId = res.getJSONObject("testCase").getString("id");
+            response.put(testCaseId, pointId);
+        }
+        return response;
+    }
+
     protected void GetTestCases(String urlType, String planId, String suiteId) throws IOException {
+        Map<String, String> pointIds = this.getPointIds("GetPointIds", planId, suiteId);
 
         String testCasesUrl = this.urlType.getOrDefault(urlType, "");
         testCasesUrl = testCasesUrl.formatted(this.organization, this.project, planId, suiteId);
@@ -160,9 +228,22 @@ public class TestPlansAutomation {
             Map<String, PlansTypeImp> testCase = new HashMap<>();
             Map<String, Object> testCaseItem = (Map<String, Object>) item.get("testCase");
             String testCaseId = (String) testCaseItem.get("id");
+            String workItemUrl = (String) testCaseItem.get("url");
+            // Get test case name
+            ConnectionProperty itemcp = new ConnectionProperty();
+            itemcp.setApiUrl(workItemUrl);
+            itemcp.setMethod("GET");
+            itemcp.setCertFile("");
+            itemcp.setPostData("");
+            DemoApis itemApis = new DemoApis();
+            String itemJson = itemApis.getDemoApis("settings.yaml", itemcp);
+            String caseName = new JSONObject(itemJson).getJSONObject("fields").getString("System.Title");
+            // End of get test case name
             String testCaseWorkItemUrl = (String) testCaseItem.get("url");
             testCase.put("TestCaseId", new PlansTypeString(testCaseId));
             testCase.put("TestCaseWorkItemUrl", new PlansTypeString(testCaseWorkItemUrl));
+            testCase.put("PointId", new PlansTypeString(pointIds.get(testCaseId)));
+            testCase.put("TestCaseName", new PlansTypeString(caseName));
             PlansTypeStringList ptsl = this.getTestSteps("TestStepsUrl", planId, testCaseId);
             testCase.put("TestCaseSteps", ptsl);
 

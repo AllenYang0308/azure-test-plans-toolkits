@@ -9,7 +9,7 @@
     <property name="dist.dir" location="dist" />
     <property name="dist.lib.dir" location="dist/lib" />
     <property name="lib.dir" value="target/dependency/" />
-    <property name="main-class" value="org.example.Main" />
+    <!-- property name="main-class" value="org.example.Main" / -->
 
     <!-- ivy start -->
     <!-- ivy to get dependencies and copy to project lib folder automatically -->

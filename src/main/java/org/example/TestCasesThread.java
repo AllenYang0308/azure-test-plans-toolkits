@@ -4,10 +4,10 @@ import java.io.IOException;
 
 public class TestCasesThread extends Thread {
 
-    private String urlType;
-    private String planId;
-    private String suiteId;
-    private TestPlansAutomation tsa;
+    private final String urlType;
+    private final String planId;
+    private final String suiteId;
+    private final TestPlansAutomation tsa;
 
     public TestCasesThread(TestPlansAutomation tsa, String urlType, String planId, String suiteId) {
         this.tsa = tsa;
