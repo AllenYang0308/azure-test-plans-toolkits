@@ -74,9 +74,8 @@ public class TestPlansAutomation {
         return rsp;
     }
 
-    protected String String (String runsName, String planId, int pointId) throws IOException {
+    protected String CreateCaseRuns(String runsName, String planId, int pointId) throws IOException {
         String runsId = "0";
-        // Create post data.
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("name", runsName);
         JSONObject planObject = new JSONObject();
@@ -85,7 +84,6 @@ public class TestPlansAutomation {
         Integer[] pointIds = new Integer[]{pointId};
         jsonObject.put("pointIds", pointIds);
         String outputString = jsonObject.toString();
-        // Do Create runs
         String runsUrl = this.urlType.getOrDefault("CreateRuns", "");
         runsUrl = runsUrl.formatted(this.organization, this.project);
         ConnectionProperty cp = new ConnectionProperty();
