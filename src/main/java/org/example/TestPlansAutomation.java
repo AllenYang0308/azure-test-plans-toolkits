@@ -74,7 +74,7 @@ public class TestPlansAutomation {
         return rsp;
     }
 
-    protected String CreateCaseRuns(String runsName, String planId, int pointId) throws IOException {
+    protected String (String runsName, String planId, int pointId) throws IOException {
         String runsId = "0";
         // Create post data.
         JSONObject jsonObject = new JSONObject();
@@ -95,7 +95,6 @@ public class TestPlansAutomation {
         cp.setPostData(outputString);
         DemoApis apis = new DemoApis();
         String json = apis.getDemoApis("settings.yaml", cp);
-        System.out.println(json);
         // Get run Id
         runsId = String.valueOf(new JSONObject(json).getInt("id"));
         return runsId;
@@ -146,7 +145,6 @@ public class TestPlansAutomation {
         postData.put("comment", comment);
         postDataList = new JSONObject[]{postData};
         String postDataString = Arrays.toString(postDataList);
-        System.out.println(postDataString);
 
         String updateResultUrl = this.urlType.getOrDefault("UpdateResult", "");
         updateResultUrl = updateResultUrl.formatted(this.organization, this.project, runsId);
@@ -158,7 +156,6 @@ public class TestPlansAutomation {
         DemoApis apis = new DemoApis();
         String json = apis.getDemoApis("settings.yaml", cp);
         JSONObject jsonObject = new JSONObject(json);
-        System.out.println(jsonObject);
     }
 
 
@@ -223,7 +220,6 @@ public class TestPlansAutomation {
         cp.setPostData("");
         DemoApis apis = new DemoApis();
         String json = apis.getDemoApis("settings.yaml", cp);
-        System.out.println("Cases list: "+json);
 
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> map = objectMapper.readValue(json, new TypeReference<Map<String, Object>>(){});
@@ -272,7 +268,6 @@ public class TestPlansAutomation {
 
         String testPlansUrl = this.urlType.getOrDefault(urlType, "");
         testPlansUrl = testPlansUrl.formatted(this.organization, this.project);
-        System.out.println(testPlansUrl);
         ConnectionProperty cp = new ConnectionProperty();
         cp.setApiUrl(testPlansUrl);
         cp.setMethod("GET");
@@ -280,7 +275,6 @@ public class TestPlansAutomation {
         cp.setPostData("");
         DemoApis apis = new DemoApis();
         String json = apis.getDemoApis("settings.yaml", cp);
-        System.out.println(json);
 
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> map = objectMapper.readValue(json, new TypeReference<Map<String, Object>>(){});
