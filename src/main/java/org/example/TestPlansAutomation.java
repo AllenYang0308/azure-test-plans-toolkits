@@ -74,7 +74,7 @@ public class TestPlansAutomation {
         return rsp;
     }
 
-    protected String (String runsName, String planId, int pointId) throws IOException {
+    protected String String (String runsName, String planId, int pointId) throws IOException {
         String runsId = "0";
         // Create post data.
         JSONObject jsonObject = new JSONObject();
