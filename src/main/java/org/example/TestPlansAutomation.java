@@ -16,7 +16,6 @@ import org.json.JSONObject;
 import org.json.JSONArray;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.net.URLEncoder;
 
 
 @Getter
@@ -89,7 +88,6 @@ public class TestPlansAutomation {
         String outputString = jsonObject.toString();
         String runsUrl = this.urlType.getOrDefault("CreateRuns", "");
         runsUrl = runsUrl.formatted(this.organization, this.project);
-        System.out.println(outputString);
         ConnectionProperty cp = new ConnectionProperty();
         cp.setApiUrl(runsUrl);
         cp.setMethod("POST");
@@ -105,8 +103,6 @@ public class TestPlansAutomation {
     protected String CreateSharedParameters(String postData) throws IOException {
         String runsUrl = this.urlType.getOrDefault("CreateSharedParameters", "");
         runsUrl = runsUrl.formatted(this.organization, this.project, "%24Shared%20Parameter");
-        // runsUrl = runsUrl+"%24%7BShared%20cd ..Parameter%7D?api-version=6.0";
-        System.out.println(runsUrl);
         ConnectionProperty cp = new ConnectionProperty();
         cp.setApiUrl(runsUrl);
         cp.setMethod("POST");
