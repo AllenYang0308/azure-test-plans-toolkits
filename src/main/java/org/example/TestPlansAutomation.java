@@ -16,6 +16,8 @@ import org.json.JSONObject;
 import org.json.JSONArray;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.net.URLEncoder;
+
 
 @Getter
 public class TestPlansAutomation {
@@ -29,7 +31,8 @@ public class TestPlansAutomation {
                     new SimpleEntry<>("StepsParameter", "https://dev.azure.com/%s/%s/_apis/wit/workitems?ids=%s&api-version=5.0"),
                     new SimpleEntry<>("GetPointIds", "https://dev.azure.com/%s/%s/_apis/test/Plans/%s/Suites/%s/points?api-version=5.0"),
                     new SimpleEntry<>("CreateRuns", "https://dev.azure.com/%s/%s/_apis/test/runs?api-version=5.0"),
-                    new SimpleEntry<>("UpdateResult", "https://dev.azure.com/%s/%s/_apis/test/Runs/%s/results?api-version=5.0")
+                    new SimpleEntry<>("UpdateResult", "https://dev.azure.com/%s/%s/_apis/test/Runs/%s/results?api-version=5.0"),
+                    new SimpleEntry<>("CreateSharedParameters", "https://dev.azure.com/%s/%s/_apis/wit/workitems/%s?api-version=6.0")
             )
     );
 
@@ -86,6 +89,7 @@ public class TestPlansAutomation {
         String outputString = jsonObject.toString();
         String runsUrl = this.urlType.getOrDefault("CreateRuns", "");
         runsUrl = runsUrl.formatted(this.organization, this.project);
+        System.out.println(outputString);
         ConnectionProperty cp = new ConnectionProperty();
         cp.setApiUrl(runsUrl);
         cp.setMethod("POST");
@@ -96,6 +100,21 @@ public class TestPlansAutomation {
         // Get run Id
         runsId = String.valueOf(new JSONObject(json).getInt("id"));
         return runsId;
+    }
+
+    protected String CreateSharedParameters(String postData) throws IOException {
+        String runsUrl = this.urlType.getOrDefault("CreateSharedParameters", "");
+        runsUrl = runsUrl.formatted(this.organization, this.project, "%24Shared%20Parameter");
+        // runsUrl = runsUrl+"%24%7BShared%20cd ..Parameter%7D?api-version=6.0";
+        System.out.println(runsUrl);
+        ConnectionProperty cp = new ConnectionProperty();
+        cp.setApiUrl(runsUrl);
+        cp.setMethod("POST");
+        cp.setCertFile("");
+        cp.setPostData(postData);
+        DemoApis apis = new DemoApis();
+        String json = apis.getDemoParamApis("settings.yaml", cp);
+        return json;
     }
 
     private PlansTypeObjectList getStepsParameter(String urlType, String planId, String workItemId) throws IOException {
@@ -120,7 +139,7 @@ public class TestPlansAutomation {
         ).getString(
                 "Microsoft.VSTS.TCM.Parameters"
         );
-        Pattern parameterPattern = Pattern.compile("<kvp\\ key=\\\"([\\ \\w\\d.]+)\\\"\\ value=\\\"([\\:\\/\\ \\d\\w\\u4E00-\\u9FA5.\\?\\&\\;\\@\\=\\[\\]\"\\*]*)\\\"/>");
+        Pattern parameterPattern = Pattern.compile("<kvp\\ key=\\\"([\\ \\w\\d.]+)\\\"\\ value=\\\"([\\:\\/\\ \\d\\w\\u4E00-\\u9FA5.\\?\\&\\;\\@\\#\\=\\[\\]\"\\*\\-\\_\\(\\)\\']*)\\\"/>");
         Matcher matcher = parameterPattern.matcher(parameterItem);
 
         Map<String, PlansTypeImp> parameterObject = new HashMap<>();
