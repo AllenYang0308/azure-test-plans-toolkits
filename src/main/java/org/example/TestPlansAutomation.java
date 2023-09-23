@@ -31,7 +31,7 @@ public class TestPlansAutomation {
                     new SimpleEntry<>("GetPointIds", "https://dev.azure.com/%s/%s/_apis/test/Plans/%s/Suites/%s/points?api-version=5.0"),
                     new SimpleEntry<>("CreateRuns", "https://dev.azure.com/%s/%s/_apis/test/runs?api-version=5.0"),
                     new SimpleEntry<>("UpdateResult", "https://dev.azure.com/%s/%s/_apis/test/Runs/%s/results?api-version=5.0"),
-                    new SimpleEntry<>("CreateSharedParameters", "https://dev.azure.com/%s/%s/_apis/wit/workitems/%s?api-version=6.0")
+                    new SimpleEntry<>("CreateSharedParameters", "https://dev.azure.com/%s/%s/_apis/wit/workitems/%s")
             )
     );
 
@@ -102,7 +102,9 @@ public class TestPlansAutomation {
 
     protected String CreateSharedParameters(String postData) throws IOException {
         String runsUrl = this.urlType.getOrDefault("CreateSharedParameters", "");
-        runsUrl = runsUrl.formatted(this.organization, this.project, "%24Shared%20Parameter");
+        runsUrl = runsUrl.formatted(this.organization, this.project, "%24Shared%20Parameter?api-version=6.0");
+        System.out.println(runsUrl);
+        System.out.println(postData);
         ConnectionProperty cp = new ConnectionProperty();
         cp.setApiUrl(runsUrl);
         cp.setMethod("POST");
