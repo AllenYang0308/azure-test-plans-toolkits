@@ -17,6 +17,7 @@ import org.json.JSONArray;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 @Getter
 public class TestPlansAutomation {
     HashMap<String, String> urlType = new HashMap<> (
@@ -29,7 +30,8 @@ public class TestPlansAutomation {
                     new SimpleEntry<>("StepsParameter", "https://dev.azure.com/%s/%s/_apis/wit/workitems?ids=%s&api-version=5.0"),
                     new SimpleEntry<>("GetPointIds", "https://dev.azure.com/%s/%s/_apis/test/Plans/%s/Suites/%s/points?api-version=5.0"),
                     new SimpleEntry<>("CreateRuns", "https://dev.azure.com/%s/%s/_apis/test/runs?api-version=5.0"),
-                    new SimpleEntry<>("UpdateResult", "https://dev.azure.com/%s/%s/_apis/test/Runs/%s/results?api-version=5.0")
+                    new SimpleEntry<>("UpdateResult", "https://dev.azure.com/%s/%s/_apis/test/Runs/%s/results?api-version=5.0"),
+                    new SimpleEntry<>("CreateSharedParameters", "https://dev.azure.com/%s/%s/_apis/wit/workitems/%s")
             )
     );
 
@@ -98,6 +100,21 @@ public class TestPlansAutomation {
         return runsId;
     }
 
+    protected String CreateSharedParameters(String postData) throws IOException {
+        String runsUrl = this.urlType.getOrDefault("CreateSharedParameters", "");
+        runsUrl = runsUrl.formatted(this.organization, this.project, "%24Shared%20Parameter?api-version=6.0");
+        System.out.println(runsUrl);
+        System.out.println(postData);
+        ConnectionProperty cp = new ConnectionProperty();
+        cp.setApiUrl(runsUrl);
+        cp.setMethod("POST");
+        cp.setCertFile("");
+        cp.setPostData(postData);
+        DemoApis apis = new DemoApis();
+        String json = apis.getDemoParamApis("settings.yaml", cp);
+        return json;
+    }
+
     private PlansTypeObjectList getStepsParameter(String urlType, String planId, String workItemId) throws IOException {
         String parameterUrl = this.urlType.getOrDefault(urlType, "");
         PlansTypeObjectList parameterList = new PlansTypeObjectList();
@@ -120,7 +137,7 @@ public class TestPlansAutomation {
         ).getString(
                 "Microsoft.VSTS.TCM.Parameters"
         );
-        Pattern parameterPattern = Pattern.compile("<kvp\\ key=\\\"([\\ \\w\\d.]+)\\\"\\ value=\\\"([\\:\\/\\ \\d\\w\\u4E00-\\u9FA5.\\?\\&\\;\\@\\=\\[\\]\"\\*]*)\\\"/>");
+        Pattern parameterPattern = Pattern.compile("<kvp\\ key=\\\"([\\ \\w\\d.]+)\\\"\\ value=\\\"([\\:\\/\\ \\d\\w\\u4E00-\\u9FA5.\\?\\&\\;\\@\\#\\=\\[\\]\"\\*\\-\\_\\(\\)\\']*)\\\"/>");
         Matcher matcher = parameterPattern.matcher(parameterItem);
 
         Map<String, PlansTypeImp> parameterObject = new HashMap<>();

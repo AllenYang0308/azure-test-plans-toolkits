@@ -23,4 +23,16 @@ public class DemoApis {
         apisConnection.setRequestAuthenticate("BasicAuthentication");
         return apisConnection.GetApisResult();
     }
+
+    public String getDemoParamApis(String settingsFile, ConnectionProperty cp) throws IOException {
+        Settings settings = new Settings(settingsFile);
+        UserSettings userSettings;
+        userSettings = settings.getUserSettings();
+        ApisConnection apisConnection = new ApisConnection(cp);
+        apisConnection.properties.setUsername(userSettings.getUserName());
+        apisConnection.properties.setPassword(userSettings.getPassWord());
+        apisConnection.setRequestProperty("Content-type", "application/json-patch+json");
+        apisConnection.setRequestAuthenticate("BasicAuthentication");
+        return apisConnection.GetApisResult();
+    }
 }
