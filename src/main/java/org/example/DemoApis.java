@@ -19,7 +19,7 @@ public class DemoApis {
         ApisConnection apisConnection = new ApisConnection(cp);
         apisConnection.properties.setUsername(userSettings.getUserName());
         apisConnection.properties.setPassword(userSettings.getPassWord());
-        apisConnection.setRequestProperty("Content-type", "application/json");
+        apisConnection.setRequestProperty("Content-type", "application/json; charset=utf-8");
         apisConnection.setRequestAuthenticate("BasicAuthentication");
         return apisConnection.GetApisResult();
     }
@@ -31,7 +31,7 @@ public class DemoApis {
         ApisConnection apisConnection = new ApisConnection(cp);
         apisConnection.properties.setUsername(userSettings.getUserName());
         apisConnection.properties.setPassword(userSettings.getPassWord());
-        apisConnection.setRequestProperty("Content-type", "application/json-patch+json");
+        apisConnection.setRequestProperty("Content-type", "application/json-patch+json; charset=utf-8");
         apisConnection.setRequestAuthenticate("BasicAuthentication");
         return apisConnection.GetApisResult();
     }
