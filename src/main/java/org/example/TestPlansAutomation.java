@@ -137,7 +137,7 @@ public class TestPlansAutomation {
         ).getString(
                 "Microsoft.VSTS.TCM.Parameters"
         );
-        Pattern parameterPattern = Pattern.compile("<kvp\\ key=\\\"([\\ \\w\\d.]+)\\\"\\ value=\\\"([\\:\\/\\ \\d\\w\\u4E00-\\u9FA5.\\?\\&\\;\\@\\#\\=\\[\\]\"\\*\\-\\_\\(\\)\\']*)\\\"/>");
+        Pattern parameterPattern = Pattern.compile("<kvp\\ key=\\\"([\\ \\w\\d.]+)\\\"\\ value=\\\"([\\:\\/\\ \\d\\w\\u4E00-\\u9FA5.\\?\\&\\;\\@\\#\\=\\[\\]\"\\*\\-\\_\\(\\)\\'\\,\\.]*)\\\"/>");
         Matcher matcher = parameterPattern.matcher(parameterItem);
 
         Map<String, PlansTypeImp> parameterObject = new HashMap<>();
