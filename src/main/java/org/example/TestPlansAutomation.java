@@ -22,18 +22,20 @@ import java.util.regex.Pattern;
 public class TestPlansAutomation {
     HashMap<String, String> urlType = new HashMap<> (
             Map.ofEntries(
-                    new SimpleEntry<>("TestPlansUrl", "https://dev.azure.com/%s/%s/_apis/test/plans?api-version=5.0"),
-                    new SimpleEntry<>("TestPlanUrl", "https://dev.azure.com/%s/%s/_apis/test/plans/%s?api-version=5.0"),
-                    new SimpleEntry<>("TestSuiteUrl", "https://dev.azure.com/%s/%s/_apis/test/Plans/%s/suites/%s?api-version=5.0"),
-                    new SimpleEntry<>("TestCasesUrl", "https://dev.azure.com/%s/%s/_apis/test/Plans/%s/suites/%s/testcases?api-version=5.0"),
-                    new SimpleEntry<>("TestStepsUrl", "https://dev.azure.com/%s/_apis/wit/workItems/%s"),
-                    new SimpleEntry<>("StepsParameter", "https://dev.azure.com/%s/%s/_apis/wit/workitems?ids=%s&api-version=5.0"),
-                    new SimpleEntry<>("GetPointIds", "https://dev.azure.com/%s/%s/_apis/test/Plans/%s/Suites/%s/points?api-version=5.0"),
-                    new SimpleEntry<>("CreateRuns", "https://dev.azure.com/%s/%s/_apis/test/runs?api-version=5.0"),
-                    new SimpleEntry<>("UpdateResult", "https://dev.azure.com/%s/%s/_apis/test/Runs/%s/results?api-version=5.0"),
-                    new SimpleEntry<>("CreateSharedParameters", "https://dev.azure.com/%s/%s/_apis/wit/workitems/%s")
+                    new SimpleEntry<>("TestPlansUrl", "https://%s/%s/%s/_apis/test/plans?api-version=5.0"),
+                    new SimpleEntry<>("TestPlanUrl", "https://%s/%s/%s/_apis/test/plans/%s?api-version=5.0"),
+                    new SimpleEntry<>("TestSuiteUrl", "https://%s/%s/%s/_apis/test/Plans/%s/suites/%s?api-version=5.0"),
+                    new SimpleEntry<>("TestCasesUrl", "https://%s/%s/%s/_apis/test/Plans/%s/suites/%s/testcases?api-version=5.0"),
+                    new SimpleEntry<>("TestStepsUrl", "https://%s/%s/_apis/wit/workItems/%s"),
+                    new SimpleEntry<>("StepsParameter", "https://%s/%s/%s/_apis/wit/workitems?ids=%s&api-version=5.0"),
+                    new SimpleEntry<>("GetPointIds", "https://%s/%s/%s/_apis/test/Plans/%s/Suites/%s/points?api-version=5.0"),
+                    new SimpleEntry<>("CreateRuns", "https://%s/%s/%s/_apis/test/runs?api-version=5.0"),
+                    new SimpleEntry<>("UpdateResult", "https://%s/%s/%s/_apis/test/Runs/%s/results?api-version=5.0"),
+                    new SimpleEntry<>("CreateSharedParameters", "https://%s/%s/%s/_apis/wit/workitems/%s")
             )
     );
+
+    private String serviceDomain;
 
     @Getter
     private String organization;
@@ -50,8 +52,9 @@ public class TestPlansAutomation {
     @Getter
     private Map<String, String> workItemId;
 
-    protected TestPlansAutomation(String organization, String project) {
+    protected TestPlansAutomation(String serviceDomain, String organization, String project) {
 
+        this.serviceDomain = serviceDomain;
         this.plansTypeObjectMap = new HashMap<>();
         this.organization = organization;
         this.project = project;
@@ -87,7 +90,7 @@ public class TestPlansAutomation {
         jsonObject.put("pointIds", pointIds);
         String outputString = jsonObject.toString();
         String runsUrl = this.urlType.getOrDefault("CreateRuns", "");
-        runsUrl = runsUrl.formatted(this.organization, this.project);
+        runsUrl = runsUrl.formatted(this.serviceDomain, this.organization, this.project);
         ConnectionProperty cp = new ConnectionProperty();
         cp.setApiUrl(runsUrl);
         cp.setMethod("POST");
@@ -102,7 +105,7 @@ public class TestPlansAutomation {
 
     protected String CreateSharedParameters(String postData) throws IOException {
         String runsUrl = this.urlType.getOrDefault("CreateSharedParameters", "");
-        runsUrl = runsUrl.formatted(this.organization, this.project, "%24Shared%20Parameter?api-version=6.0");
+        runsUrl = runsUrl.formatted(this.serviceDomain, this.organization, this.project, "%24Shared%20Parameter?api-version=6.0");
         System.out.println(runsUrl);
         System.out.println(postData);
         ConnectionProperty cp = new ConnectionProperty();
@@ -118,7 +121,7 @@ public class TestPlansAutomation {
     private PlansTypeObjectList getStepsParameter(String urlType, String planId, String workItemId) throws IOException {
         String parameterUrl = this.urlType.getOrDefault(urlType, "");
         PlansTypeObjectList parameterList = new PlansTypeObjectList();
-        parameterUrl = parameterUrl.formatted(this.organization, this.project, workItemId);
+        parameterUrl = parameterUrl.formatted(this.serviceDomain, this.organization, this.project, workItemId);
         ConnectionProperty cp = new ConnectionProperty();
         cp.setApiUrl(parameterUrl);
         cp.setMethod("GET");
@@ -162,7 +165,7 @@ public class TestPlansAutomation {
         String postDataString = Arrays.toString(postDataList);
 
         String updateResultUrl = this.urlType.getOrDefault("UpdateResult", "");
-        updateResultUrl = updateResultUrl.formatted(this.organization, this.project, runsId);
+        updateResultUrl = updateResultUrl.formatted(this.serviceDomain, this.organization, this.project, runsId);
         ConnectionProperty cp = new ConnectionProperty();
         cp.setApiUrl(updateResultUrl);
         cp.setMethod("PATCH");
@@ -177,7 +180,7 @@ public class TestPlansAutomation {
     private PlansTypeStringList getTestSteps(String urlType, String planId, String testCaseId) throws IOException {
         PlansTypeStringList stepList = new PlansTypeStringList();
         String stepsUrl = this.urlType.getOrDefault(urlType, "");
-        stepsUrl = stepsUrl.formatted(this.organization, testCaseId);
+        stepsUrl = stepsUrl.formatted(this.serviceDomain, this.organization, testCaseId);
         ConnectionProperty cp = new ConnectionProperty();
         cp.setApiUrl(stepsUrl);
         cp.setMethod("GET");
@@ -202,8 +205,13 @@ public class TestPlansAutomation {
 
     protected Map<String, String> getPointIds(String urlType, String planId, String suiteId) throws IOException {
         Map<String, String> response = new HashMap<>();
+        this.urlType.put("demoUrl", "https://www.google.com.tw/");
+        this.urlType.put("demoUrl", "https://www.yuanta.com/");
+        System.out.println("-------------------------------------------------");
+        System.out.println(this.urlType);
+        System.out.println("-------------------------------------------------");
         String pointIdsUrl = this.urlType.getOrDefault(urlType, "");
-        pointIdsUrl = pointIdsUrl.formatted(this.organization, this.project, planId, suiteId);
+        pointIdsUrl = pointIdsUrl.formatted(this.serviceDomain, this.organization, this.project, planId, suiteId);
         ConnectionProperty cp = new ConnectionProperty();
         cp.setApiUrl(pointIdsUrl);
         cp.setMethod("GET");
@@ -227,7 +235,7 @@ public class TestPlansAutomation {
         Map<String, String> pointIds = this.getPointIds("GetPointIds", planId, suiteId);
 
         String testCasesUrl = this.urlType.getOrDefault(urlType, "");
-        testCasesUrl = testCasesUrl.formatted(this.organization, this.project, planId, suiteId);
+        testCasesUrl = testCasesUrl.formatted(this.serviceDomain, this.organization, this.project, planId, suiteId);
         ConnectionProperty cp = new ConnectionProperty();
         cp.setApiUrl(testCasesUrl);
         cp.setMethod("GET");
@@ -282,7 +290,7 @@ public class TestPlansAutomation {
     public void GetTestPlans(String urlType) throws IOException {
 
         String testPlansUrl = this.urlType.getOrDefault(urlType, "");
-        testPlansUrl = testPlansUrl.formatted(this.organization, this.project);
+        testPlansUrl = testPlansUrl.formatted(this.serviceDomain, this.organization, this.project);
         ConnectionProperty cp = new ConnectionProperty();
         cp.setApiUrl(testPlansUrl);
         cp.setMethod("GET");
